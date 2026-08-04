@@ -1,0 +1,13 @@
+{
+  "name": "album-fotos-xv",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Álbum colaborativo de fotos por mesas con QR",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "generar-qr": "npm --prefix backend run generar-qr",
+    "build": "npm --prefix frontend run build"
+  }
+}

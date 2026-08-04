@@ -1,0 +1,27 @@
+{
+  "name": "album-fotos-qr-backend",
+  "version": "1.0.0",
+  "description": "Backend del álbum colaborativo de fotos por mesas (QR)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "seed": "node src/scripts/seed.js",
+    "generar-qr": "node src/scripts/generar-qr.js",
+    "init-db": "node src/scripts/init-db.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jimp": "^1.6.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pdfkit": "^0.16.0",
+    "pg": "^8.13.1",
+    "qrcode": "^1.5.4"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules/
+.env
+qr-generados/*.png
+qr-generados/*.pdf
+!qr-generados/.gitkeep
+uploads/
+*.log
