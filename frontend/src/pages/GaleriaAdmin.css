@@ -6,9 +6,9 @@
     max(2.5rem, env(safe-area-inset-bottom))
     max(1rem, env(safe-area-inset-left));
   background:
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(126, 184, 232, 0.28), transparent 50%),
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.7) 0 1.5px, transparent 2.5px),
-    linear-gradient(180deg, #f7fbff 0%, #dceffb 100%);
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(95, 145, 200, 0.35), transparent 50%),
+    radial-gradient(circle at 12% 18%, rgba(201, 184, 122, 0.2) 0 1.5px, transparent 2.5px),
+    linear-gradient(180deg, #7eafdc 0%, #a9cce8 50%, #e2eef8 100%);
 }
 
 .admin-header {
@@ -33,7 +33,7 @@
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.7rem, 4vw, 2.4rem);
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .admin-meta {
@@ -60,8 +60,8 @@
   gap: 0.4rem;
   padding: 0.3rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(126, 184, 232, 0.3);
+  background: rgba(210, 230, 245, 0.5);
+  border: 1px solid rgba(120, 165, 210, 0.25);
 }
 
 .admin-tabs button {
@@ -79,9 +79,9 @@
 }
 
 .admin-tabs button.active {
-  background: #fff;
+  background: rgba(230, 242, 252, 0.95);
   color: var(--sky-deep);
-  box-shadow: 0 4px 14px rgba(74, 144, 196, 0.12);
+  box-shadow: 0 4px 14px rgba(74, 134, 196, 0.1);
 }
 
 .admin-error,
@@ -134,8 +134,8 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  border: 1px solid rgba(126, 184, 232, 0.3);
-  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(120, 165, 210, 0.28);
+  background: rgba(220, 236, 248, 0.7);
   border-radius: 14px;
   padding: 0.85rem 0.95rem;
   min-height: 52px;
@@ -147,16 +147,17 @@
 
 .admin-mesa-item:hover {
   transform: translateY(-1px);
+  background: rgba(210, 230, 245, 0.85);
 }
 
 .admin-mesa-item.selected {
-  border-color: rgba(74, 144, 196, 0.55);
-  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(90, 145, 200, 0.5);
+  background: rgba(200, 225, 245, 0.9);
 }
 
 .admin-mesa-name {
   font-weight: 600;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .admin-mesa-count {
@@ -172,8 +173,8 @@
   margin: 0 auto;
   padding: 1rem;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(126, 184, 232, 0.25);
+  background: rgba(235, 245, 252, 0.8);
+  border: 1px solid rgba(90, 135, 185, 0.25);
 }
 
 .admin-mesa-detail {
@@ -194,6 +195,13 @@
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.4rem, 4vw, 1.7rem);
+  color: var(--ink-strong);
+}
+
+.admin-detail-head p {
+  margin: 0;
+  color: #5a7390;
+  font-weight: 600;
 }
 
 .admin-photos-title {
@@ -201,7 +209,7 @@
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.25rem;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .mesa-qr {
@@ -209,8 +217,8 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(126, 184, 232, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(180, 205, 235, 0.35);
 }
 
 @media (min-width: 640px) {
@@ -282,7 +290,7 @@
 
 .admin-general-toolbar p {
   margin: 0;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .admin-grid {

@@ -1,13 +1,18 @@
 :root {
-  --ink: #1e3a4c;
-  --muted: #5a7a8f;
-  --sky: #7eb8e8;
-  --sky-deep: #4a90c4;
-  --sky-soft: #d6eefa;
-  --ice: #f4fafd;
-  --silver: #b8c5d6;
-  --champagne: #e8d5a3;
+  --ink: #1a3358;
+  --ink-strong: #142844;
+  --muted: #5a7390;
+  --sky: #5b8fd4;
+  --sky-deep: #2f5f9e;
+  --sky-soft: #c5daf0;
+  --ice: #e8f0f8;
+  --midnight: #2a4a78;
+  --royal: #3d6eb0;
+  --silver: #a8bcd4;
+  --champagne: #c9b87a;
   --glass: rgba(255, 255, 255, 0.55);
+  --card: rgba(255, 255, 255, 0.88);
+  --card-border: rgba(90, 130, 180, 0.28);
   --font-script: 'Great Vibes', cursive;
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Outfit', system-ui, sans-serif;
@@ -71,20 +76,20 @@ label {
 
 .btn-primary {
   color: #fff;
-  background: linear-gradient(145deg, var(--sky) 0%, var(--sky-deep) 100%);
-  box-shadow: 0 12px 28px rgba(74, 144, 196, 0.28);
+  background: linear-gradient(145deg, #7eb0dc 0%, #4a86c4 100%);
+  box-shadow: 0 12px 28px rgba(74, 134, 196, 0.25);
 }
 
 .btn-secondary {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(126, 184, 232, 0.45);
+  color: var(--ink-strong);
+  background: rgba(220, 236, 248, 0.85);
+  border: 1px solid rgba(120, 165, 210, 0.35);
 }
 
 .btn-ghost {
-  color: var(--muted);
-  background: transparent;
-  border: 1px solid rgba(90, 122, 143, 0.25);
+  color: var(--ink-strong);
+  background: rgba(210, 230, 245, 0.45);
+  border: 1px solid rgba(120, 165, 210, 0.3);
 }
 
 @keyframes rise-in {
@@ -127,4 +132,91 @@ label {
   50% {
     transform: translateY(-6px);
   }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  40% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes twinkle-alt {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* Capa de estrellitas / brillos para fondos */
+.starfield {
+  position: relative;
+  isolation: isolate;
+}
+
+.starfield::before,
+.starfield::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.starfield::before {
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 12%, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1.5px 1.5px at 18% 28%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 27% 8%, rgba(255, 248, 220, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 36% 42%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 48% 18%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(2px 2px at 58% 33%, rgba(255, 248, 220, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 67% 14%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 74% 48%, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(2px 2px at 84% 22%, rgba(255, 248, 220, 0.95), transparent),
+    radial-gradient(1.5px 1.5px at 92% 38%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 12% 58%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 22% 72%, rgba(255, 248, 220, 0.75), transparent),
+    radial-gradient(1px 1px at 41% 64%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(2px 2px at 53% 78%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 69% 68%, rgba(255, 248, 220, 0.85), transparent),
+    radial-gradient(1px 1px at 81% 82%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 94% 64%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 5% 88%, rgba(255, 248, 220, 0.7), transparent),
+    radial-gradient(2px 2px at 33% 90%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 61% 92%, rgba(255, 255, 255, 0.65), transparent);
+  animation: twinkle 4.5s ease-in-out infinite;
+}
+
+.starfield::after {
+  background-image:
+    radial-gradient(1px 1px at 14% 20%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 31% 35%, rgba(255, 248, 220, 0.85), transparent),
+    radial-gradient(1px 1px at 44% 6%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 62% 26%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 78% 12%, rgba(255, 248, 220, 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 88% 55%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 25% 50%, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1.5px 1.5px at 49% 55%, rgba(255, 248, 220, 0.8), transparent),
+    radial-gradient(1px 1px at 71% 44%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(2px 2px at 16% 80%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 38% 75%, rgba(255, 248, 220, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 56% 85%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 86% 74%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 96% 90%, rgba(255, 248, 220, 0.85), transparent);
+  animation: twinkle-alt 6s ease-in-out infinite;
+}
+
+.starfield > * {
+  position: relative;
+  z-index: 1;
 }

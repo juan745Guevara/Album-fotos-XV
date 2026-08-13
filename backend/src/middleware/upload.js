@@ -6,6 +6,8 @@ const ALLOWED_MIME = new Set([
   'image/jpg',
   'image/png',
   'image/webp',
+  'image/heic',
+  'image/heif',
 ]);
 
 const upload = multer({
@@ -17,7 +19,7 @@ const upload = multer({
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_MIME.has(file.mimetype)) {
       return cb(
-        new Error('Formato no permitido. Usa jpg, jpeg, png o webp.')
+        new Error('Formato no permitido. Usa jpg, jpeg, png, webp o heic.')
       );
     }
     cb(null, true);

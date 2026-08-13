@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getMesa, subirFoto } from '../services/api';
-import cenicientaImg from '../assets/cenicienta.png';
 import './SubirFoto.css';
 
 const MAX_RETRIES = 2;
@@ -54,8 +53,12 @@ export default function SubirFoto() {
     setSuccess('');
     setError('');
 
-    if (!selected.type.startsWith('image/')) {
-      setError('Solo se permiten imágenes (jpg, png, webp).');
+    if (
+      !selected.type.startsWith('image/') &&
+      !/\.heic$/i.test(selected.name) &&
+      !/\.heif$/i.test(selected.name)
+    ) {
+      setError('Solo se permiten imágenes (jpg, png, webp, heic).');
       return;
     }
 
@@ -127,10 +130,7 @@ export default function SubirFoto() {
 
   if (loading) {
     return (
-      <div className="mesa-page">
-        <div className="mesa-hero" aria-hidden="true">
-          <img src={cenicientaImg} alt="" className="mesa-hero-img" />
-        </div>
+      <div className="mesa-page starfield">
         <div className="mesa-shell">
           <p className="mesa-status">Cargando mesa…</p>
         </div>
@@ -140,10 +140,7 @@ export default function SubirFoto() {
 
   if (!mesa) {
     return (
-      <div className="mesa-page">
-        <div className="mesa-hero" aria-hidden="true">
-          <img src={cenicientaImg} alt="" className="mesa-hero-img" />
-        </div>
+      <div className="mesa-page starfield">
         <div className="mesa-shell">
           <h1 className="mesa-brand">Mis XV</h1>
           <p className="mesa-error">{error || 'Mesa no encontrada.'}</p>
@@ -158,14 +155,7 @@ export default function SubirFoto() {
   const restantes = Math.max(mesa.max_fotos - mesa.cantidad_fotos, 0);
 
   return (
-    <div className="mesa-page">
-      <div className="mesa-hero">
-        <img
-          src={cenicientaImg}
-          alt="Cenicienta"
-          className="mesa-hero-img"
-        />
-      </div>
+    <div className="mesa-page starfield">
       <div className="mesa-shell">
         <header className="mesa-header">
           <p className="mesa-brand">Mis XV</p>
@@ -208,14 +198,14 @@ export default function SubirFoto() {
                   </span>
                   <span className="mesa-capture-label">Tomar o elegir foto</span>
                   <span className="mesa-capture-hint">
-                    Cámara o galería · máx. 100MB
+                    Cámara o galería · calidad original · máx. 100MB
                   </span>
                 </label>
                 <input
                   id="foto-input"
                   ref={inputRef}
                   type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
                   capture="environment"
                   onChange={onSelectFile}
                   hidden

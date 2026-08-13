@@ -20,13 +20,12 @@ export async function generarQrConLogo(texto, width = 360) {
     width,
     margin: 2,
     errorCorrectionLevel: 'H',
-    color: { dark: '#1e3a4c', light: '#ffffff' },
+    color: { dark: '#000000', light: '#ffffff' },
   });
 
   const ctx = canvas.getContext('2d');
   const logo = await loadImage(LOGO_SRC);
 
-  // Silueta vertical: un poco más alta que ancha, con fondo blanco
   const logoH = Math.round(width * 0.3);
   const logoW = Math.round(logoH * 0.78);
   const x = (canvas.width - logoW) / 2;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { loginAdmin } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import cenicientaImg from '../assets/cenicienta.png';
+import cenicientaBust from '../assets/cenicienta-bust.png';
 import './LoginAdmin.css';
 
 export default function LoginAdmin() {
@@ -34,15 +34,14 @@ export default function LoginAdmin() {
   }
 
   return (
-    <div className="login-page">
+    <div className="login-page starfield">
       <div className="login-wrap">
         <img
-          src={cenicientaImg}
+          src={cenicientaBust}
           alt=""
           className="login-cenicienta"
           aria-hidden="true"
         />
-
         <form className="login-card" onSubmit={handleSubmit}>
           <p className="login-brand">Mis XV</p>
           <h1>Panel admin</h1>

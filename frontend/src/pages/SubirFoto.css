@@ -3,62 +3,34 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.7) 0 2px, transparent 3px),
-    radial-gradient(circle at 82% 18%, rgba(232, 213, 163, 0.45) 0 1.5px, transparent 2.5px),
-    linear-gradient(180deg, #c8e4f8 0%, #d9eefc 42%, #eef7fc 100%);
-  overflow-x: hidden;
-}
-
-.mesa-hero {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 260px;
-  height: clamp(260px, 46vh, 380px);
   padding:
-    max(0.75rem, env(safe-area-inset-top))
-    1rem
-    0;
-  animation: fade-in 0.7s ease both;
-}
-
-.mesa-hero-img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: min(92%, 340px);
-  object-fit: contain;
-  object-position: bottom center;
-  filter: drop-shadow(0 14px 28px rgba(74, 144, 196, 0.28));
-  animation: float-soft 6.5s ease-in-out infinite;
-  user-select: none;
-  pointer-events: none;
+    max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.55) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 18%, rgba(201, 184, 122, 0.28) 0 1.5px, transparent 2.5px),
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(120, 165, 220, 0.35), transparent 55%),
+    linear-gradient(180deg, #6fa3d8 0%, #8fbae4 40%, #d4e6f5 100%);
+  overflow-x: hidden;
 }
 
 .mesa-shell {
   position: relative;
   z-index: 2;
   width: min(100%, 460px);
-  margin: -1.25rem auto 0;
-  padding:
-    1.35rem
-    max(1rem, env(safe-area-inset-right))
-    max(2rem, env(safe-area-inset-bottom))
-    max(1rem, env(safe-area-inset-left));
-  border-radius: 28px 28px 0 0;
+  margin: 0 auto;
+  padding: 1.35rem 1.1rem 1.75rem;
+  border-radius: 28px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(247, 251, 255, 0.96) 100%
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(244, 249, 255, 0.97) 100%
   );
-  box-shadow: 0 -10px 40px rgba(74, 144, 196, 0.12);
+  box-shadow: 0 10px 40px rgba(47, 95, 158, 0.16);
   backdrop-filter: blur(8px);
-  flex: 1;
+  flex: 0 1 auto;
   animation: rise-in 0.6s ease both;
 }
 
@@ -74,7 +46,7 @@
   letter-spacing: 0.02em;
   margin: 0 0 0.2rem;
   line-height: 1.1;
-  text-shadow: 0 2px 18px rgba(255, 255, 255, 0.65);
+  text-shadow: none;
   animation: fade-in 0.7s ease both;
 }
 
@@ -83,13 +55,13 @@
   font-size: clamp(2.3rem, 11vw, 3.3rem);
   font-weight: 600;
   line-height: 1;
-  color: var(--ink);
+  color: var(--ink-strong);
   margin: 0;
 }
 
 .mesa-subtitle {
   margin: 0.55rem 0 0;
-  color: var(--muted);
+  color: #5a7390;
   font-size: clamp(0.92rem, 3.5vw, 1.02rem);
 }
 
@@ -116,7 +88,7 @@
   margin: 0.55rem 0 0;
   text-align: center;
   font-size: 0.95rem;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .mesa-counter-text strong {
@@ -138,7 +110,7 @@
   padding: 1.5rem 1.25rem;
   border: 2px dashed rgba(74, 144, 196, 0.45);
   border-radius: 24px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(214, 238, 250, 0.55));
+  background: linear-gradient(180deg, rgba(230, 242, 252, 0.75), rgba(215, 233, 247, 0.55));
   backdrop-filter: blur(8px);
   box-shadow: 0 16px 40px rgba(74, 144, 196, 0.12);
   cursor: pointer;
@@ -167,7 +139,7 @@
 .mesa-capture-label {
   font-weight: 700;
   font-size: clamp(1.05rem, 4vw, 1.2rem);
-  color: var(--ink);
+  color: var(--ink-strong);
   text-align: center;
 }
 
@@ -225,7 +197,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(1.3rem, 5vw, 1.55rem);
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .mesa-limit span {
@@ -267,7 +239,7 @@
   font-size: clamp(1.35rem, 5vw, 1.6rem);
   font-weight: 600;
   margin: 0 0 0.85rem;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .mesa-grid {
@@ -307,18 +279,7 @@
 }
 
 @media (min-width: 768px) {
-  .mesa-hero {
-    min-height: 360px;
-  }
-
-  .mesa-hero-img {
-    width: min(70%, 340px);
-    max-height: 340px;
-  }
-
   .mesa-shell {
     width: min(100%, 480px);
-    border-radius: 28px;
-    margin-bottom: 2rem;
   }
 }

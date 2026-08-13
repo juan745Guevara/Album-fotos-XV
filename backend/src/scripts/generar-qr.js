@@ -19,7 +19,7 @@ async function generarQrConLogo(url, filePath, width = 600) {
     width,
     margin: 2,
     errorCorrectionLevel: 'H',
-    color: { dark: '#1e3a4c', light: '#ffffff' },
+    color: { dark: '#000000', light: '#ffffff' },
   });
 
   const qr = await Jimp.read(qrBuffer);

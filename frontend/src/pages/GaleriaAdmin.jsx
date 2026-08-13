@@ -137,7 +137,7 @@ export default function GaleriaAdmin() {
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page starfield">
       <header className="admin-header">
         <div>
           <p className="admin-brand">Mis XV</p>
