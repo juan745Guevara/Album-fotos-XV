@@ -1,7 +1,11 @@
 const path = require('path');
 const archiver = require('archiver');
 const db = require('../config/db');
-const { deleteObject, getObjectBuffer } = require('../config/s3');
+const { deleteObject, getObjectBuffer, streamObject } = require('../config/s3');
+
+function toAppImageUrl(fotoId) {
+  return `/api/fotos/${fotoId}/archivo`;
+}
 
 function extensionFromKey(storageKey) {
   const ext = path.extname(storageKey || '').toLowerCase();
@@ -45,7 +49,13 @@ async function listFotos(req, res) {
       );
     }
 
-    return res.json({ fotos: result.rows, total: result.rows.length });
+    return res.json({
+      fotos: result.rows.map((foto) => ({
+        ...foto,
+        url_imagen: toAppImageUrl(foto.id),
+      })),
+      total: result.rows.length,
+    });
   } catch (error) {
     console.error('Error listFotos:', error);
     return res.status(500).json({ error: 'Error al listar fotos.' });
@@ -110,6 +120,32 @@ async function descargarZip(req, res) {
   }
 }
 
+async function servirArchivo(req, res) {
+  const fotoId = Number(req.params.id);
+
+  if (!Number.isInteger(fotoId) || fotoId < 1) {
+    return res.status(400).json({ error: 'ID de foto inválido.' });
+  }
+
+  try {
+    const result = await db.query(
+      'SELECT id, storage_key FROM fotos WHERE id = $1',
+      [fotoId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Foto no encontrada.' });
+    }
+
+    await streamObject(result.rows[0].storage_key, res);
+  } catch (error) {
+    console.error('Error servirArchivo:', error);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'No se pudo cargar la foto.' });
+    }
+  }
+}
+
 async function eliminarFoto(req, res) {
   const fotoId = Number(req.params.id);
 
@@ -165,5 +201,6 @@ async function eliminarFoto(req, res) {
 module.exports = {
   listFotos,
   descargarZip,
+  servirArchivo,
   eliminarFoto,
 };

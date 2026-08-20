@@ -3,6 +3,10 @@ const { uploadBuffer } = require('../config/s3');
 
 const MAX_FOTOS = Number(process.env.MAX_FOTOS_POR_MESA) || 10;
 
+function toAppImageUrl(fotoId) {
+  return `/api/fotos/${fotoId}/archivo`;
+}
+
 async function getMesa(req, res) {
   const mesaId = Number(req.params.id);
 
@@ -38,7 +42,10 @@ async function getMesa(req, res) {
       cantidad_fotos: mesa.cantidad_fotos,
       max_fotos: MAX_FOTOS,
       limite_alcanzado: mesa.cantidad_fotos >= MAX_FOTOS,
-      fotos: fotosResult.rows,
+      fotos: fotosResult.rows.map((foto) => ({
+        ...foto,
+        url_imagen: toAppImageUrl(foto.id),
+      })),
     });
   } catch (error) {
     console.error('Error getMesa:', error);
@@ -138,9 +145,14 @@ async function subirFoto(req, res) {
 
     await client.query('COMMIT');
 
+    const foto = fotoResult.rows[0];
+
     return res.status(201).json({
       mensaje: 'Foto subida correctamente.',
-      foto: fotoResult.rows[0],
+      foto: {
+        ...foto,
+        url_imagen: toAppImageUrl(foto.id),
+      },
       cantidad_fotos: updateResult.rows[0].cantidad_fotos,
       max_fotos: MAX_FOTOS,
     });

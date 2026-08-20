@@ -1,5 +1,6 @@
 const { randomUUID } = require('crypto');
 const path = require('path');
+const { pipeline } = require('stream/promises');
 const {
   S3Client,
   PutObjectCommand,
@@ -111,9 +112,29 @@ async function getObjectBuffer(key) {
   return Buffer.concat(chunks);
 }
 
+async function streamObject(key, res) {
+  assertConfigured();
+
+  const response = await s3.send(
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+  );
+
+  res.setHeader('Content-Type', response.ContentType || 'application/octet-stream');
+  if (response.ContentLength != null) {
+    res.setHeader('Content-Length', String(response.ContentLength));
+  }
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+
+  await pipeline(response.Body, res);
+}
+
 module.exports = {
   uploadBuffer,
   deleteObject,
   getObjectBuffer,
+  streamObject,
   buildPublicUrl,
 };

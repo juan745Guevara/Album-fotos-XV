@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/', authAdmin, fotosController.listFotos);
 router.get('/zip', authAdmin, fotosController.descargarZip);
+router.get('/:id/archivo', fotosController.servirArchivo);
 router.delete('/:id', authAdmin, fotosController.eliminarFoto);
 
 module.exports = router;
