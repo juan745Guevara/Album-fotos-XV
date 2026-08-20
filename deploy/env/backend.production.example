@@ -4,10 +4,8 @@ DB_SSL=true
 
 AWS_REGION=us-east-1
 AWS_S3_BUCKET=album-fotos-xv-prod
-# En EC2: usa rol IAM (no pongas keys aquí)
-# En local para pruebas:
-# AWS_ACCESS_KEY_ID=
-# AWS_SECRET_ACCESS_KEY=
+AWS_ACCESS_KEY_ID=TU_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=TU_SECRET_ACCESS_KEY
 # Opcional CloudFront:
 # AWS_S3_PUBLIC_URL=https://d123456.cloudfront.net
 

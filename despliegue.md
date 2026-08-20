@@ -4,6 +4,46 @@ Guía paso a paso para publicar el **Álbum de Fotos XV** en producción usando 
 
 ---
 
+## Orden exacto (rápido)
+
+Sigue este orden sin saltarte pasos:
+
+1. Crear **EC2** (Ubuntu, puertos 22/80/443) y conectarte por SSH.
+2. Crear **RDS PostgreSQL** (misma VPC) y abrir 5432 solo desde el Security Group de EC2.
+3. Crear **S3 bucket** y configurar policy + usuario de acceso programático.
+4. Clonar repo en EC2 y dar permisos a `/var/www`.
+5. Configurar `backend/.env` y `frontend/.env` de producción.
+6. Instalar dependencias, correr `seed`, compilar frontend.
+7. Levantar API con PM2.
+8. Configurar Nginx (`/` frontend y `/api` backend).
+9. Configurar dominio y SSL con Certbot.
+10. Probar app completa y generar QR finales con dominio real.
+
+Comandos mínimos del flujo:
+
+```bash
+sudo mkdir -p /var/www && sudo chown -R ubuntu:ubuntu /var/www
+cd /var/www && git clone https://github.com/juan745Guevara/Album-fotos-XV.git
+cd /var/www/Album-fotos-XV
+
+sudo bash deploy/scripts/install-server.sh
+cp deploy/env/backend.production.example backend/.env
+cp deploy/env/frontend.production.example frontend/.env
+
+npm install --prefix backend --omit=dev
+npm run seed --prefix backend
+bash deploy/scripts/build-production.sh
+
+pm2 start ecosystem.config.js && pm2 save
+sudo cp deploy/nginx/album-fotos.conf /etc/nginx/sites-available/album-fotos
+sudo ln -sf /etc/nginx/sites-available/album-fotos /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+FRONTEND_URL=https://tu-dominio.com npm run generar-qr --prefix backend
+```
+
+---
+
 ## Resumen de servicios
 
 | Servicio | Obligatorio | Para qué |
@@ -47,10 +87,9 @@ Frontend          API Node.js
 Antes de empezar, ten listo:
 
 1. Cuenta en [AWS](https://aws.amazon.com)
-2. Bucket **S3** creado (Parte 3)
-3. Repositorio del proyecto en GitHub (o forma de subir código al servidor)
-4. Dominio (opcional pero recomendado para los QR impresos)
-5. Par de claves SSH para conectarte a la EC2
+2. Repositorio del proyecto en GitHub (o forma de subir código al servidor)
+3. Dominio (opcional pero recomendado para los QR impresos)
+4. Par de claves SSH para conectarte a la EC2
 
 ---
 
@@ -214,13 +253,13 @@ Para que invitados vean fotos en el navegador, el prefijo `album-evento/*` debe 
 
 > Cambia `album-fotos-xv-prod` por el nombre de tu bucket. Si Block Public Access está activo, desmarca “Block all public access” o la policy no aplicará.
 
-### 3.3 Rol IAM para la EC2 (recomendado)
+### 3.3 Usuario IAM (Access Key) para S3
 
-No guardes `AWS_ACCESS_KEY` en el servidor. Asigna un **rol IAM** a la EC2:
+Aquí se usa un **usuario IAM** con claves de acceso programático:
 
-1. **IAM → Roles → Create role**
-2. Trusted entity: **AWS service → EC2**
-3. Política inline (ajusta bucket y región):
+1. **IAM → Users → Create user**
+2. Marca **Provide user access to the AWS Management Console: Off** (solo programático).
+3. En permisos, adjunta una policy inline (ajusta bucket y región):
 
 ```json
 {
@@ -235,15 +274,15 @@ No guardes `AWS_ACCESS_KEY` en el servidor. Asigna un **rol IAM** a la EC2:
 }
 ```
 
-4. **EC2 → instancia → Actions → Security → Modify IAM role** → asigna el rol
-
-En producción **no** necesitas `AWS_ACCESS_KEY_ID` en `.env`; el SDK las obtiene del rol.
+4. Crea y guarda la **Access key** y **Secret access key** (se muestran una sola vez).
 
 ### 3.4 Variables en backend/.env
 
 ```env
 AWS_REGION=us-east-1
 AWS_S3_BUCKET=album-fotos-xv-prod
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
 ```
 
 Opcional con **CloudFront** (CDN):
@@ -254,12 +293,7 @@ AWS_S3_PUBLIC_URL=https://d123456abcdef.cloudfront.net
 
 ### 3.5 Desarrollo local
 
-En tu PC, crea un usuario IAM con la misma policy y pon en `backend/.env`:
-
-```env
-AWS_ACCESS_KEY_ID=AKIA...
-AWS_SECRET_ACCESS_KEY=...
-```
+Usa las mismas variables AWS en `backend/.env`.
 
 ---
 
@@ -479,7 +513,7 @@ Credenciales admin: las que pusiste en `ADMIN_USER` / `ADMIN_PASSWORD`.
 - [ ] `DATABASE_URL` y `DB_SSL=true` en `backend/.env`
 - [ ] Conexión probada con `psql` desde la EC2
 - [ ] Bucket S3 creado con policy de lectura en `album-evento/*`
-- [ ] Rol IAM en EC2 con permisos Put/Get/Delete en S3
+- [ ] Usuario IAM creado con permisos Put/Get/Delete en S3
 - [ ] `backend/.env` completo
 - [ ] `frontend/.env` con dominio real
 - [ ] `npm run seed` ejecutado sin errores
@@ -550,10 +584,9 @@ Luego: `sudo nginx -t && sudo systemctl reload nginx`
 ### Subida falla en S3
 
 - Verifica `AWS_S3_BUCKET` y `AWS_REGION` en `backend/.env`
-- EC2: confirma que la instancia tiene el **rol IAM** correcto
-- Local: revisa `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY`
+- Revisa `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY` en `backend/.env`
 - Bucket policy: lectura pública en `album-evento/*` para ver fotos en el navegador
-- Permisos IAM: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` en el prefijo
+- Policy del usuario: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` en el prefijo
 
 ### Frontend carga pero la API falla (CORS / 404)
 
@@ -579,7 +612,6 @@ FRONTEND_URL=https://tu-dominio.com npm run generar-qr --prefix backend
 | RDS db.t3.micro | ~$15–20 USD |
 | Elastic IP | Gratis si está asociada |
 | S3 (pocas GB) | ~$0.50–2 USD |
-| Elastic IP | Gratis si está asociada |
 | Dominio | ~$10–15 USD/año |
 
 **Stack completo (EC2 + RDS + S3):** ≈ **$25–38 USD/mes**.
@@ -597,7 +629,7 @@ deploy/
 │   └── album-fotos.conf
 ├── s3/
 │   ├── bucket-policy.example.json
-│   └── iam-ec2-policy.example.json
+│   └── iam-user-policy.example.json
 └── scripts/
     ├── build-production.sh
     └── install-server.sh

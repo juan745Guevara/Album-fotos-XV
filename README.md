@@ -121,7 +121,7 @@ Carpetas S3: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 - `PORT`, `DATABASE_URL`
 - `AWS_REGION`, `AWS_S3_BUCKET`
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (solo local; en EC2 usa rol IAM)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - `AWS_S3_PUBLIC_URL` (opcional, si usas CloudFront)
 - `JWT_SECRET`, `ADMIN_USER`, `ADMIN_PASSWORD`
 - `FRONTEND_URL` (para generar QR)

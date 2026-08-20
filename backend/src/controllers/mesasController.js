@@ -161,7 +161,7 @@ async function subirFoto(req, res) {
       storageMsg.includes('Access Denied')
     ) {
       return res.status(503).json({
-        error: 'Sin permisos para subir a S3. Revisa el rol IAM de la EC2 o las credenciales AWS.',
+        error: 'Sin permisos para subir a S3. Revisa AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY y la policy del usuario.',
       });
     }
 
