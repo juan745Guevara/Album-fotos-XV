@@ -8,6 +8,8 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "seed": "npm --prefix backend run seed",
     "generar-qr": "npm --prefix backend run generar-qr",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "build:prod": "bash deploy/scripts/build-production.sh",
+    "start:backend": "npm --prefix backend start"
   }
 }

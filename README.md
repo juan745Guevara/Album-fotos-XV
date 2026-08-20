@@ -33,6 +33,9 @@ Album-fotos-XV/
 │   │   ├── services/api.js
 │   │   └── ...
 │   └── .env.example
+├── deploy/                  # Nginx, env producción, scripts
+├── ecosystem.config.js      # PM2
+├── despliegue.md            # Guía completa AWS
 └── README.md
 ```
 
@@ -129,82 +132,13 @@ Carpetas Cloudinary: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 **Nunca subas `.env` a git.**
 
-## Deploy en AWS (EC2 + Nginx + PM2)
+## Deploy en producción
 
-Stack recomendado para dejar el sitio **siempre encendido** con subidas grandes (hasta 100 MB):
+Guía completa paso a paso para **Amazon AWS (EC2 + RDS + Nginx + PM2 + Cloudinary)**:
 
-| Servicio | Uso |
-|----------|-----|
-| **EC2** | Node (API) + Nginx (frontend estático) |
-| **RDS PostgreSQL** o Postgres en la misma EC2 | Base de datos |
-| **Cloudinary** | Almacenamiento de imágenes |
+👉 **[despliegue.md](./despliegue.md)**
 
-### 1. Servidor EC2
-
-- Ubuntu 22.04, tipo `t3.micro` o `t3.small`
-- Abre puertos **22**, **80** y **443** en el Security Group
-- Instala: Node 20, Nginx, PM2, PostgreSQL (local) o usa RDS
-
-### 2. Clonar y configurar
-
-```bash
-git clone <tu-repo> /var/www/album-fotos
-cd /var/www/album-fotos
-
-cd backend && cp .env.example .env
-# Edita .env: DATABASE_URL, Cloudinary, JWT_SECRET, FRONTEND_URL=https://tu-dominio.com
-npm install && npm run seed
-
-cd ../frontend && cp .env.example .env
-# VITE_API_URL=/api   VITE_PUBLIC_URL=https://tu-dominio.com
-npm install && npm run build
-```
-
-### 3. Arrancar API con PM2
-
-```bash
-cd /var/www/album-fotos
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup   # sigue las instrucciones que imprime
-```
-
-### 4. Nginx
-
-```nginx
-server {
-  server_name tu-dominio.com;
-
-  location /api/ {
-    proxy_pass http://127.0.0.1:4000/api/;
-    proxy_read_timeout 300s;
-    client_max_body_size 105M;
-  }
-
-  location / {
-    root /var/www/album-fotos/frontend/dist;
-    try_files $uri $uri/ /index.html;
-  }
-}
-```
-
-SSL con Certbot:
-
-```bash
-sudo certbot --nginx -d tu-dominio.com
-```
-
-### 5. QR finales
-
-```bash
-cd backend
-FRONTEND_URL=https://tu-dominio.com npm run generar-qr
-```
-
-URLs:
-
-- Invitados: `https://tu-dominio.com/mesa/1`
-- Admin: `https://tu-dominio.com/admin/login`
+Incluye: creación de EC2, RDS PostgreSQL, Cloudinary, SSL, PM2, Nginx, QR finales y checklist.
 
 ## UX invitados
 
