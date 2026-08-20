@@ -288,8 +288,8 @@ function PhotoGrid({ fotos, onDelete, deletingId, emptyText, showMesa }) {
     <div className="admin-grid">
       {fotos.map((foto) => (
         <figure key={foto.id} className="admin-photo">
-          <a href={foto.url_cloudinary} target="_blank" rel="noreferrer">
-            <img src={foto.url_cloudinary} alt={`Foto ${foto.id}`} loading="lazy" />
+          <a href={foto.url_imagen} target="_blank" rel="noreferrer">
+            <img src={foto.url_imagen} alt={`Foto ${foto.id}`} loading="lazy" />
           </a>
           <figcaption>
             {showMesa && <span>{foto.mesa_nombre || `Mesa ${foto.mesa_id}`}</span>}

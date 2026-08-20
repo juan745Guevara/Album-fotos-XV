@@ -1,6 +1,6 @@
 # Guía de despliegue en Amazon AWS
 
-Guía paso a paso para publicar el **Álbum de Fotos XV** en producción usando **EC2 + Amazon RDS + Nginx + PM2 + Cloudinary**.
+Guía paso a paso para publicar el **Álbum de Fotos XV** en producción usando **EC2 + Amazon RDS + Amazon S3 + Nginx + PM2**.
 
 ---
 
@@ -10,7 +10,7 @@ Guía paso a paso para publicar el **Álbum de Fotos XV** en producción usando 
 |----------|-------------|----------|
 | **Amazon EC2** | Sí | Servidor: API Node.js, frontend estático, Nginx |
 | **Amazon RDS (PostgreSQL)** | Sí | Base de datos: mesas, fotos, admin |
-| **Cloudinary** | Sí | Almacenamiento de imágenes |
+| **Amazon S3** | Sí | Almacenamiento de fotos |
 | **Dominio** | Recomendado | URL fija para los QR (`https://tudominio.com`) |
 | **Route 53** | Opcional | DNS si el dominio está en AWS |
 | **Elastic IP** | Opcional | IP fija para la EC2 |
@@ -36,8 +36,8 @@ Frontend          API Node.js
                        │
               ┌────────┴────────┐
               │                 │
-         Amazon RDS          Cloudinary
-         (PostgreSQL)          (fotos)
+         Amazon RDS            Amazon S3
+         (PostgreSQL)           (fotos)
 ```
 
 ---
@@ -47,7 +47,7 @@ Frontend          API Node.js
 Antes de empezar, ten listo:
 
 1. Cuenta en [AWS](https://aws.amazon.com)
-2. Cuenta en [Cloudinary](https://cloudinary.com) (plan free sirve)
+2. Bucket **S3** creado (Parte 3)
 3. Repositorio del proyecto en GitHub (o forma de subir código al servidor)
 4. Dominio (opcional pero recomendado para los QR impresos)
 5. Par de claves SSH para conectarte a la EC2
@@ -175,16 +175,91 @@ Esto crea las tablas `mesas`, `fotos`, `admins`, las 10 mesas y el usuario admin
 
 ---
 
-## Parte 3 — Cloudinary
+## Parte 3 — Amazon S3 (fotos)
 
-1. Crea cuenta en [cloudinary.com](https://cloudinary.com)
-2. En el Dashboard copia:
-   - **Cloud name**
-   - **API Key**
-   - **API Secret**
-3. Esas tres variables van al `.env` del backend
+Las imágenes se guardan en **S3**, no en la EC2. Estructura: `album-evento/mesa-1/`, `mesa-2/`, etc.
 
-Las fotos se guardan en carpetas: `album-evento/mesa-1/`, `mesa-2/`, etc.
+### 3.1 Crear el bucket
+
+1. **AWS Console → S3 → Create bucket**
+2. Configuración sugerida:
+
+| Campo | Valor |
+|-------|-------|
+| Bucket name | `album-fotos-xv-prod` (único globalmente) |
+| Region | La misma que tu EC2/RDS (ej. `us-east-1`) |
+| Block Public Access | Desactiva solo si usarás lectura pública del prefijo `album-evento/` (ver abajo) |
+| Versioning | Opcional |
+
+### 3.2 Política de lectura pública (prefijo album-evento)
+
+Para que invitados vean fotos en el navegador, el prefijo `album-evento/*` debe ser legible públicamente.
+
+**Bucket → Permissions → Bucket policy:**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadAlbumEvento",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::album-fotos-xv-prod/album-evento/*"
+    }
+  ]
+}
+```
+
+> Cambia `album-fotos-xv-prod` por el nombre de tu bucket. Si Block Public Access está activo, desmarca “Block all public access” o la policy no aplicará.
+
+### 3.3 Rol IAM para la EC2 (recomendado)
+
+No guardes `AWS_ACCESS_KEY` en el servidor. Asigna un **rol IAM** a la EC2:
+
+1. **IAM → Roles → Create role**
+2. Trusted entity: **AWS service → EC2**
+3. Política inline (ajusta bucket y región):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::album-fotos-xv-prod/album-evento/*"
+    }
+  ]
+}
+```
+
+4. **EC2 → instancia → Actions → Security → Modify IAM role** → asigna el rol
+
+En producción **no** necesitas `AWS_ACCESS_KEY_ID` en `.env`; el SDK las obtiene del rol.
+
+### 3.4 Variables en backend/.env
+
+```env
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=album-fotos-xv-prod
+```
+
+Opcional con **CloudFront** (CDN):
+
+```env
+AWS_S3_PUBLIC_URL=https://d123456abcdef.cloudfront.net
+```
+
+### 3.5 Desarrollo local
+
+En tu PC, crea un usuario IAM con la misma policy y pon en `backend/.env`:
+
+```env
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+```
 
 ---
 
@@ -241,7 +316,9 @@ Completa **todas** las variables:
 | `PORT` | `4000` | No cambiar |
 | `DATABASE_URL` | `postgresql://...@....rds.amazonaws.com:5432/album_fotos_qr` | Ver Parte 2 |
 | `DB_SSL` | `true` | **Obligatorio** con RDS |
-| `CLOUDINARY_*` | — | Del dashboard Cloudinary |
+| `AWS_REGION` | `us-east-1` | Región del bucket |
+| `AWS_S3_BUCKET` | `album-fotos-xv-prod` | Nombre del bucket |
+| `AWS_S3_PUBLIC_URL` | — | Opcional (CloudFront) |
 | `JWT_SECRET` | string largo aleatorio | Mín. 32 caracteres |
 | `ADMIN_USER` | `admin` | Usuario del panel |
 | `ADMIN_PASSWORD` | — | Contraseña del evento |
@@ -401,7 +478,8 @@ Credenciales admin: las que pusiste en `ADMIN_USER` / `ADMIN_PASSWORD`.
 - [ ] Security Group de RDS permite solo la EC2 (puerto 5432)
 - [ ] `DATABASE_URL` y `DB_SSL=true` en `backend/.env`
 - [ ] Conexión probada con `psql` desde la EC2
-- [ ] Cloudinary configurado
+- [ ] Bucket S3 creado con policy de lectura en `album-evento/*`
+- [ ] Rol IAM en EC2 con permisos Put/Get/Delete en S3
 - [ ] `backend/.env` completo
 - [ ] `frontend/.env` con dominio real
 - [ ] `npm run seed` ejecutado sin errores
@@ -469,10 +547,13 @@ client_max_body_size 105M;
 
 Luego: `sudo nginx -t && sudo systemctl reload nginx`
 
-### Subida falla en Cloudinary
+### Subida falla en S3
 
-- Revisa `CLOUDINARY_*` en `backend/.env`
-- Verifica cuota del plan free de Cloudinary
+- Verifica `AWS_S3_BUCKET` y `AWS_REGION` en `backend/.env`
+- EC2: confirma que la instancia tiene el **rol IAM** correcto
+- Local: revisa `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY`
+- Bucket policy: lectura pública en `album-evento/*` para ver fotos en el navegador
+- Permisos IAM: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` en el prefijo
 
 ### Frontend carga pero la API falla (CORS / 404)
 
@@ -497,10 +578,11 @@ FRONTEND_URL=https://tu-dominio.com npm run generar-qr --prefix backend
 | EC2 t3.small | ~$15–18 USD |
 | RDS db.t3.micro | ~$15–20 USD |
 | Elastic IP | Gratis si está asociada |
-| Cloudinary free | $0 (con límites) |
+| S3 (pocas GB) | ~$0.50–2 USD |
+| Elastic IP | Gratis si está asociada |
 | Dominio | ~$10–15 USD/año |
 
-**Stack completo (EC2 + RDS + Cloudinary free):** ≈ **$25–35 USD/mes**.
+**Stack completo (EC2 + RDS + S3):** ≈ **$25–38 USD/mes**.
 
 ---
 
@@ -513,6 +595,9 @@ deploy/
 │   └── frontend.production.example
 ├── nginx/
 │   └── album-fotos.conf
+├── s3/
+│   ├── bucket-policy.example.json
+│   └── iam-ec2-policy.example.json
 └── scripts/
     ├── build-production.sh
     └── install-server.sh

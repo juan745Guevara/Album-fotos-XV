@@ -108,7 +108,7 @@ export default function SubirFoto() {
         fotos: [
           {
             id: result.foto.id,
-            url_cloudinary: result.foto.url_cloudinary,
+            url_imagen: result.foto.url_imagen,
             fecha_subida: result.foto.fecha_subida,
           },
           ...(prev?.fotos || []),
@@ -252,12 +252,12 @@ export default function SubirFoto() {
               {mesa.fotos.map((foto) => (
                 <a
                   key={foto.id}
-                  href={foto.url_cloudinary}
+                  href={foto.url_imagen}
                   target="_blank"
                   rel="noreferrer"
                   className="mesa-thumb"
                 >
-                  <img src={foto.url_cloudinary} alt={`Foto ${foto.id}`} loading="lazy" />
+                  <img src={foto.url_imagen} alt={`Foto ${foto.id}`} loading="lazy" />
                 </a>
               ))}
             </div>

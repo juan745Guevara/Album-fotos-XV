@@ -1,5 +1,6 @@
 require('dotenv').config();
 const db = require('../config/db');
+const { migrateFotosColumns } = require('./migrate-schema');
 
 async function initDb() {
   const client = await db.getClient();
@@ -19,11 +20,13 @@ async function initDb() {
       CREATE TABLE IF NOT EXISTS fotos (
         id SERIAL PRIMARY KEY,
         mesa_id INTEGER NOT NULL REFERENCES mesas(id) ON DELETE CASCADE,
-        url_cloudinary TEXT NOT NULL,
-        public_id_cloudinary TEXT NOT NULL,
+        url_imagen TEXT NOT NULL,
+        storage_key TEXT NOT NULL,
         fecha_subida TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
+
+    await migrateFotosColumns(client);
 
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_fotos_mesa_id ON fotos(mesa_id);

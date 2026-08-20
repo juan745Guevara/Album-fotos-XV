@@ -1,46 +1,14 @@
-const https = require('https');
-const http = require('http');
+const path = require('path');
 const archiver = require('archiver');
 const db = require('../config/db');
-const { destroyImage } = require('../config/cloudinary');
+const { deleteObject, getObjectBuffer } = require('../config/s3');
 
-function fetchBuffer(url) {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-
-    client
-      .get(url, (response) => {
-        if (
-          response.statusCode >= 300 &&
-          response.statusCode < 400 &&
-          response.headers.location
-        ) {
-          return fetchBuffer(response.headers.location).then(resolve, reject);
-        }
-
-        if (response.statusCode !== 200) {
-          return reject(
-            new Error(`Error al descargar imagen: HTTP ${response.statusCode}`)
-          );
-        }
-
-        const chunks = [];
-        response.on('data', (chunk) => chunks.push(chunk));
-        response.on('end', () => resolve(Buffer.concat(chunks)));
-        response.on('error', reject);
-      })
-      .on('error', reject);
-  });
-}
-
-function extensionFromUrl(url) {
-  try {
-    const pathname = new URL(url).pathname;
-    const match = pathname.match(/\.(jpe?g|png|webp)$/i);
-    return match ? match[0].toLowerCase() : '.jpg';
-  } catch {
-    return '.jpg';
+function extensionFromKey(storageKey) {
+  const ext = path.extname(storageKey || '').toLowerCase();
+  if (/^\.(jpe?g|png|webp|heic|heif)$/.test(ext)) {
+    return ext === '.jpeg' ? '.jpg' : ext;
   }
+  return '.jpg';
 }
 
 async function listFotos(req, res) {
@@ -56,7 +24,7 @@ async function listFotos(req, res) {
     if (mesaId) {
       result = await db.query(
         `
-          SELECT f.id, f.mesa_id, f.url_cloudinary, f.public_id_cloudinary,
+          SELECT f.id, f.mesa_id, f.url_imagen, f.storage_key,
                  f.fecha_subida, m.nombre AS mesa_nombre
           FROM fotos f
           JOIN mesas m ON m.id = f.mesa_id
@@ -68,7 +36,7 @@ async function listFotos(req, res) {
     } else {
       result = await db.query(
         `
-          SELECT f.id, f.mesa_id, f.url_cloudinary, f.public_id_cloudinary,
+          SELECT f.id, f.mesa_id, f.url_imagen, f.storage_key,
                  f.fecha_subida, m.nombre AS mesa_nombre
           FROM fotos f
           JOIN mesas m ON m.id = f.mesa_id
@@ -88,7 +56,7 @@ async function descargarZip(req, res) {
   try {
     const result = await db.query(
       `
-        SELECT f.id, f.mesa_id, f.url_cloudinary, m.nombre AS mesa_nombre
+        SELECT f.id, f.mesa_id, f.url_imagen, f.storage_key, m.nombre AS mesa_nombre
         FROM fotos f
         JOIN mesas m ON m.id = f.mesa_id
         ORDER BY f.mesa_id ASC, f.fecha_subida ASC
@@ -122,10 +90,10 @@ async function descargarZip(req, res) {
 
     for (const foto of result.rows) {
       try {
-        const buffer = await fetchBuffer(foto.url_cloudinary);
+        const buffer = await getObjectBuffer(foto.storage_key);
         contadores[foto.mesa_id] = (contadores[foto.mesa_id] || 0) + 1;
         const n = String(contadores[foto.mesa_id]).padStart(2, '0');
-        const ext = extensionFromUrl(foto.url_cloudinary);
+        const ext = extensionFromKey(foto.storage_key);
         const nombre = `mesa-${foto.mesa_id}/foto-${n}${ext}`;
         archive.append(buffer, { name: nombre });
       } catch (err) {
@@ -155,7 +123,7 @@ async function eliminarFoto(req, res) {
     await client.query('BEGIN');
 
     const fotoResult = await client.query(
-      'SELECT id, mesa_id, public_id_cloudinary FROM fotos WHERE id = $1 FOR UPDATE',
+      'SELECT id, mesa_id, storage_key FROM fotos WHERE id = $1 FOR UPDATE',
       [fotoId]
     );
 
@@ -179,9 +147,9 @@ async function eliminarFoto(req, res) {
     await client.query('COMMIT');
 
     try {
-      await destroyImage(foto.public_id_cloudinary);
-    } catch (cloudErr) {
-      console.warn('Foto borrada en DB pero no en Cloudinary:', cloudErr.message);
+      await deleteObject(foto.storage_key);
+    } catch (s3Err) {
+      console.warn('Foto borrada en DB pero no en S3:', s3Err.message);
     }
 
     return res.json({ mensaje: 'Foto eliminada correctamente.' });

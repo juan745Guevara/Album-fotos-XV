@@ -8,7 +8,7 @@ Sistema web para un evento con **10 mesas físicas**. Cada mesa tiene un código
 |------|------------|
 | Backend | Node.js + Express |
 | Frontend | React + Vite (mobile-first) |
-| Imágenes | Cloudinary |
+| Imágenes | Amazon S3 |
 | Base de datos | PostgreSQL |
 | Auth admin | JWT + bcrypt |
 | QR | `qrcode` + PDF opcional con `pdfkit` |
@@ -19,7 +19,7 @@ Sistema web para un evento con **10 mesas físicas**. Cada mesa tiene un código
 Album-fotos-XV/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # DB y Cloudinary
+│   │   ├── config/          # DB y S3
 │   │   ├── controllers/
 │   │   ├── middleware/      # auth admin, multer
 │   │   ├── routes/
@@ -64,7 +64,7 @@ CREATE DATABASE album_fotos_qr;
 ```bash
 cd backend
 cp .env.example .env
-# Edita .env con DATABASE_URL, Cloudinary, JWT_SECRET, ADMIN_USER, ADMIN_PASSWORD
+# Edita .env con DATABASE_URL, AWS S3, JWT_SECRET, ADMIN_USER, ADMIN_PASSWORD
 npm install
 npm run seed          # crea tablas + 10 mesas + admin
 npm run dev           # http://localhost:4000
@@ -106,21 +106,23 @@ Genera:
 | POST | `/api/mesas/:id/fotos` | No | Sube foto (`multipart` campo `foto`) |
 | GET | `/api/fotos` | Admin | Todas las fotos (`?mesa_id=` opcional) |
 | GET | `/api/fotos/zip` | Admin | ZIP con todas las fotos |
-| DELETE | `/api/fotos/:id` | Admin | Elimina foto (DB + Cloudinary) |
+| DELETE | `/api/fotos/:id` | Admin | Elimina foto (DB + S3) |
 | POST | `/api/admin/login` | No | `{ usuario, password }` → JWT |
 
 ### Regla de límite
 
-Antes de aceptar una subida, el backend hace `SELECT … FOR UPDATE` sobre la mesa, verifica `cantidad_fotos < 10` y solo entonces sube a Cloudinary e inserta. Si ya llegó al límite responde **409**.
+Antes de aceptar una subida, el backend hace `SELECT … FOR UPDATE` sobre la mesa, verifica `cantidad_fotos < 10` y solo entonces sube a S3 e inserta. Si ya llegó al límite responde **409**.
 
-Carpetas Cloudinary: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
+Carpetas S3: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 ## Variables de entorno
 
 **Backend (`.env`):**
 
 - `PORT`, `DATABASE_URL`
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- `AWS_REGION`, `AWS_S3_BUCKET`
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (solo local; en EC2 usa rol IAM)
+- `AWS_S3_PUBLIC_URL` (opcional, si usas CloudFront)
 - `JWT_SECRET`, `ADMIN_USER`, `ADMIN_PASSWORD`
 - `FRONTEND_URL` (para generar QR)
 - `MAX_FOTOS_POR_MESA`, `MAX_FILE_SIZE_MB` (opcionales)
@@ -134,11 +136,11 @@ Carpetas Cloudinary: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 ## Deploy en producción
 
-Guía completa paso a paso para **Amazon AWS (EC2 + RDS + Nginx + PM2 + Cloudinary)**:
+Guía completa paso a paso para **Amazon AWS (EC2 + RDS + S3 + Nginx + PM2)**:
 
 👉 **[despliegue.md](./despliegue.md)**
 
-Incluye: creación de EC2, RDS PostgreSQL, Cloudinary, SSL, PM2, Nginx, QR finales y checklist.
+Incluye: creación de EC2, RDS, S3, SSL, PM2, Nginx, QR finales y checklist.
 
 ## UX invitados
 

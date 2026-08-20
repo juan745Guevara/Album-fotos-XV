@@ -2,9 +2,14 @@ PORT=4000
 DATABASE_URL=postgresql://album_admin:TU_PASSWORD@album-fotos-xv.xxxxx.us-east-1.rds.amazonaws.com:5432/album_fotos_qr
 DB_SSL=true
 
-CLOUDINARY_CLOUD_NAME=tu_cloud_name
-CLOUDINARY_API_KEY=tu_api_key
-CLOUDINARY_API_SECRET=tu_api_secret
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=album-fotos-xv-prod
+# En EC2: usa rol IAM (no pongas keys aquí)
+# En local para pruebas:
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=
+# Opcional CloudFront:
+# AWS_S3_PUBLIC_URL=https://d123456.cloudfront.net
 
 JWT_SECRET=genera_un_secreto_largo_y_aleatorio_minimo_32_caracteres
 ADMIN_USER=admin

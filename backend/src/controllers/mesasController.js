@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { uploadBuffer } = require('../config/cloudinary');
+const { uploadBuffer } = require('../config/s3');
 
 const MAX_FOTOS = Number(process.env.MAX_FOTOS_POR_MESA) || 10;
 
@@ -22,7 +22,7 @@ async function getMesa(req, res) {
 
     const fotosResult = await db.query(
       `
-        SELECT id, url_cloudinary, fecha_subida
+        SELECT id, url_imagen, fecha_subida
         FROM fotos
         WHERE mesa_id = $1
         ORDER BY fecha_subida DESC
@@ -110,15 +110,20 @@ async function subirFoto(req, res) {
       });
     }
 
-    const uploadResult = await uploadBuffer(req.file.buffer, mesaId);
+    const uploadResult = await uploadBuffer(
+      req.file.buffer,
+      mesaId,
+      req.file.mimetype,
+      req.file.originalname
+    );
 
     const fotoResult = await client.query(
       `
-        INSERT INTO fotos (mesa_id, url_cloudinary, public_id_cloudinary)
+        INSERT INTO fotos (mesa_id, url_imagen, storage_key)
         VALUES ($1, $2, $3)
-        RETURNING id, mesa_id, url_cloudinary, public_id_cloudinary, fecha_subida
+        RETURNING id, mesa_id, url_imagen, storage_key, fecha_subida
       `,
-      [mesaId, uploadResult.secure_url, uploadResult.public_id]
+      [mesaId, uploadResult.url, uploadResult.key]
     );
 
     const updateResult = await client.query(
@@ -143,15 +148,20 @@ async function subirFoto(req, res) {
     await client.query('ROLLBACK');
     console.error('Error subirFoto:', error);
 
-    const cloudMsg = error?.message || '';
+    const storageMsg = error?.message || '';
+    if (error?.code === 'S3_NOT_CONFIGURED' || storageMsg.includes('AWS_S3_BUCKET')) {
+      return res.status(503).json({
+        error: 'Amazon S3 no está configurado. Revisa AWS_S3_BUCKET y credenciales en backend/.env.',
+      });
+    }
+
     if (
-      cloudMsg.includes('Unknown API key') ||
-      cloudMsg.includes('Invalid Signature') ||
-      error?.http_code === 401
+      error?.name === 'CredentialsProviderError' ||
+      error?.name === 'AccessDenied' ||
+      storageMsg.includes('Access Denied')
     ) {
       return res.status(503).json({
-        error:
-          'Cloudinary no está configurado. Revisa CLOUDINARY_* en backend/.env.',
+        error: 'Sin permisos para subir a S3. Revisa el rol IAM de la EC2 o las credenciales AWS.',
       });
     }
 

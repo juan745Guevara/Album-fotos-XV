@@ -1,6 +1,7 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const db = require('../config/db');
+const { migrateFotosColumns } = require('./migrate-schema');
 
 const TOTAL_MESAS = 10;
 
@@ -24,11 +25,13 @@ async function seed() {
       CREATE TABLE IF NOT EXISTS fotos (
         id SERIAL PRIMARY KEY,
         mesa_id INTEGER NOT NULL REFERENCES mesas(id) ON DELETE CASCADE,
-        url_cloudinary TEXT NOT NULL,
-        public_id_cloudinary TEXT NOT NULL,
+        url_imagen TEXT NOT NULL,
+        storage_key TEXT NOT NULL,
         fecha_subida TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
+
+    await migrateFotosColumns(client);
 
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_fotos_mesa_id ON fotos(mesa_id);
