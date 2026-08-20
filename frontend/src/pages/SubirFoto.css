@@ -113,12 +113,23 @@
   background: linear-gradient(180deg, rgba(230, 242, 252, 0.75), rgba(215, 233, 247, 0.55));
   backdrop-filter: blur(8px);
   box-shadow: 0 16px 40px rgba(74, 144, 196, 0.12);
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.mesa-capture:active {
-  transform: scale(0.985);
+.mesa-capture-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+.mesa-capture-actions .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
 }
 
 .mesa-capture-icon {

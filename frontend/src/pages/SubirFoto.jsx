@@ -7,7 +7,8 @@ const MAX_RETRIES = 2;
 
 export default function SubirFoto() {
   const { id } = useParams();
-  const inputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const [mesa, setMesa] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,8 @@ export default function SubirFoto() {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     setFile(null);
-    if (inputRef.current) inputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
   }
 
   function onSelectFile(event) {
@@ -191,26 +193,40 @@ export default function SubirFoto() {
         ) : (
           <section className="mesa-upload">
             {!preview ? (
-              <>
-                <label className="mesa-capture" htmlFor="foto-input">
-                  <span className="mesa-capture-icon" aria-hidden="true">
-                    +
-                  </span>
-                  <span className="mesa-capture-label">Tomar o elegir foto</span>
-                  <span className="mesa-capture-hint">
-                    Cámara o galería · calidad original · máx. 100MB
-                  </span>
-                </label>
+              <div className="mesa-capture">
+                <span className="mesa-capture-icon" aria-hidden="true">
+                  +
+                </span>
+                <span className="mesa-capture-label">Agrega una foto</span>
+                <span className="mesa-capture-hint">
+                  Calidad original · máx. 100MB
+                </span>
+                <div className="mesa-capture-actions">
+                  <label className="btn btn-primary" htmlFor="foto-camara">
+                    Tomar foto
+                  </label>
+                  <label className="btn btn-secondary" htmlFor="foto-galeria">
+                    Elegir de galería
+                  </label>
+                </div>
                 <input
-                  id="foto-input"
-                  ref={inputRef}
+                  id="foto-camara"
+                  ref={cameraInputRef}
                   type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+                  accept="image/*"
                   capture="environment"
                   onChange={onSelectFile}
                   hidden
                 />
-              </>
+                <input
+                  id="foto-galeria"
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+                  onChange={onSelectFile}
+                  hidden
+                />
+              </div>
             ) : (
               <div className="mesa-preview">
                 <img src={preview} alt="Vista previa" />
