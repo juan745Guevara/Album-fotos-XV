@@ -25,11 +25,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Error interno del servidor.' });
 });
 
-// En local arranca el servidor; en Vercel la función serverless exporta la app.
-if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`API escuchando en http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`API escuchando en http://localhost:${PORT}`);
+});
 
 module.exports = app;

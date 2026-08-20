@@ -17,10 +17,6 @@ Sistema web para un evento con **10 mesas físicas**. Cada mesa tiene un código
 
 ```
 Album-fotos-XV/
-├── api/
-│   └── index.js             # Handler serverless para Vercel
-├── vercel.json              # Config de deploy (frontend + API)
-├── package.json             # Scripts raíz para Vercel
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # DB y Cloudinary
@@ -128,92 +124,52 @@ Carpetas Cloudinary: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 **Frontend (`.env`):**
 
-- `VITE_API_URL` — en producción: `/api` (mismo dominio en Vercel)
+- `VITE_API_URL` — en producción con Nginx: `/api` o `https://tu-dominio.com/api`
 - `VITE_PUBLIC_URL` — URL pública del sitio (para QR en el panel admin)
 
 **Nunca subas `.env` a git.**
 
-## Deploy en Vercel (recomendado)
+## Deploy en AWS (EC2 + Nginx + PM2)
 
-El proyecto incluye `vercel.json` en la raíz: frontend estático + API Express como función serverless en `/api`.
+Stack recomendado para dejar el sitio **siempre encendido** con subidas grandes (hasta 100 MB):
 
-### 1. Base de datos
+| Servicio | Uso |
+|----------|-----|
+| **EC2** | Node (API) + Nginx (frontend estático) |
+| **RDS PostgreSQL** o Postgres en la misma EC2 | Base de datos |
+| **Cloudinary** | Almacenamiento de imágenes |
 
-Usa PostgreSQL en la nube ([Neon](https://neon.tech), [Supabase](https://supabase.com), etc.) y copia la `DATABASE_URL`.
+### 1. Servidor EC2
 
-En local, crea tablas y datos iniciales:
+- Ubuntu 22.04, tipo `t3.micro` o `t3.small`
+- Abre puertos **22**, **80** y **443** en el Security Group
+- Instala: Node 20, Nginx, PM2, PostgreSQL (local) o usa RDS
 
-```bash
-cd backend
-# Configura DATABASE_URL apuntando a la DB en la nube
-npm run seed
-```
-
-### 2. Conectar el repo
-
-1. Sube el proyecto a GitHub.
-2. En [vercel.com](https://vercel.com) → **Add New Project** → importa el repo.
-3. Vercel detectará `vercel.json` (root directory: raíz del monorepo).
-
-### 3. Variables de entorno en Vercel
-
-Configúralas en **Project → Settings → Environment Variables** (Production):
-
-| Variable | Descripción |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL (Neon/Supabase) |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary |
-| `CLOUDINARY_API_KEY` | Cloudinary |
-| `CLOUDINARY_API_SECRET` | Cloudinary |
-| `JWT_SECRET` | Secreto largo y aleatorio |
-| `ADMIN_USER` | Usuario admin |
-| `ADMIN_PASSWORD` | Contraseña admin |
-| `FRONTEND_URL` | `https://tu-proyecto.vercel.app` (para regenerar QR) |
-| `MAX_FOTOS_POR_MESA` | `10` (opcional) |
-| `MAX_FILE_SIZE_MB` | `4` recomendado en Vercel (ver nota abajo) |
-| `VITE_API_URL` | `/api` |
-| `VITE_PUBLIC_URL` | `https://tu-proyecto.vercel.app` |
-
-Las variables `VITE_*` deben existir **antes del build** del frontend.
-
-### 4. Deploy
-
-Tras el primer deploy:
-
-- Invitados: `https://tu-proyecto.vercel.app/mesa/1`
-- Admin: `https://tu-proyecto.vercel.app/admin/login`
-- Health check: `https://tu-proyecto.vercel.app/api/health`
-
-Regenera los QR con la URL final:
+### 2. Clonar y configurar
 
 ```bash
-cd backend
-FRONTEND_URL=https://tu-proyecto.vercel.app npm run generar-qr
+git clone <tu-repo> /var/www/album-fotos
+cd /var/www/album-fotos
+
+cd backend && cp .env.example .env
+# Edita .env: DATABASE_URL, Cloudinary, JWT_SECRET, FRONTEND_URL=https://tu-dominio.com
+npm install && npm run seed
+
+cd ../frontend && cp .env.example .env
+# VITE_API_URL=/api   VITE_PUBLIC_URL=https://tu-dominio.com
+npm install && npm run build
 ```
 
-### Límite de subida en Vercel
+### 3. Arrancar API con PM2
 
-Las funciones serverless de Vercel tienen un **límite de ~4.5 MB** en el cuerpo de la petición. Archivos más grandes fallarán aunque `MAX_FILE_SIZE_MB` sea mayor. Para el evento en Vercel, usa fotos de hasta ~4 MB o despliega el backend en un VPS (ver sección EC2).
-
-### Estructura de deploy
-
-```
-vercel.json          → build frontend + rewrites SPA y /api
-api/index.js         → exporta la app Express del backend
-frontend/dist/       → sitio estático
+```bash
+cd /var/www/album-fotos
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup   # sigue las instrucciones que imprime
 ```
 
-## Deploy alternativo (AWS EC2 + Nginx + PM2)
-
-Cuando esté probado en local:
-
-1. Backend con PM2 detrás de Nginx (`/api` → Node).
-2. Frontend: `npm run build` y servir `frontend/dist` como estático.
-3. Certbot para SSL.
-4. Variables de entorno solo en el servidor.
-5. Regenerar QR con `FRONTEND_URL=https://tu-dominio.com`.
-
-Ejemplo rápido Nginx:
+### 4. Nginx
 
 ```nginx
 server {
@@ -221,7 +177,8 @@ server {
 
   location /api/ {
     proxy_pass http://127.0.0.1:4000/api/;
-    client_max_body_size 12M;
+    proxy_read_timeout 300s;
+    client_max_body_size 105M;
   }
 
   location / {
@@ -230,6 +187,24 @@ server {
   }
 }
 ```
+
+SSL con Certbot:
+
+```bash
+sudo certbot --nginx -d tu-dominio.com
+```
+
+### 5. QR finales
+
+```bash
+cd backend
+FRONTEND_URL=https://tu-dominio.com npm run generar-qr
+```
+
+URLs:
+
+- Invitados: `https://tu-dominio.com/mesa/1`
+- Admin: `https://tu-dominio.com/admin/login`
 
 ## UX invitados
 
