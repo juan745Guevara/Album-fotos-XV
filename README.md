@@ -17,6 +17,10 @@ Sistema web para un evento con **10 mesas físicas**. Cada mesa tiene un código
 
 ```
 Album-fotos-XV/
+├── api/
+│   └── index.js             # Handler serverless para Vercel
+├── vercel.json              # Config de deploy (frontend + API)
+├── package.json             # Scripts raíz para Vercel
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # DB y Cloudinary
@@ -124,11 +128,82 @@ Carpetas Cloudinary: `album-evento/mesa-1/`, `album-evento/mesa-2/`, etc.
 
 **Frontend (`.env`):**
 
-- `VITE_API_URL` — en producción: `https://tu-dominio.com/api`
+- `VITE_API_URL` — en producción: `/api` (mismo dominio en Vercel)
+- `VITE_PUBLIC_URL` — URL pública del sitio (para QR en el panel admin)
 
 **Nunca subas `.env` a git.**
 
-## Deploy (AWS EC2 + Nginx + PM2)
+## Deploy en Vercel (recomendado)
+
+El proyecto incluye `vercel.json` en la raíz: frontend estático + API Express como función serverless en `/api`.
+
+### 1. Base de datos
+
+Usa PostgreSQL en la nube ([Neon](https://neon.tech), [Supabase](https://supabase.com), etc.) y copia la `DATABASE_URL`.
+
+En local, crea tablas y datos iniciales:
+
+```bash
+cd backend
+# Configura DATABASE_URL apuntando a la DB en la nube
+npm run seed
+```
+
+### 2. Conectar el repo
+
+1. Sube el proyecto a GitHub.
+2. En [vercel.com](https://vercel.com) → **Add New Project** → importa el repo.
+3. Vercel detectará `vercel.json` (root directory: raíz del monorepo).
+
+### 3. Variables de entorno en Vercel
+
+Configúralas en **Project → Settings → Environment Variables** (Production):
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL (Neon/Supabase) |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary |
+| `CLOUDINARY_API_KEY` | Cloudinary |
+| `CLOUDINARY_API_SECRET` | Cloudinary |
+| `JWT_SECRET` | Secreto largo y aleatorio |
+| `ADMIN_USER` | Usuario admin |
+| `ADMIN_PASSWORD` | Contraseña admin |
+| `FRONTEND_URL` | `https://tu-proyecto.vercel.app` (para regenerar QR) |
+| `MAX_FOTOS_POR_MESA` | `10` (opcional) |
+| `MAX_FILE_SIZE_MB` | `4` recomendado en Vercel (ver nota abajo) |
+| `VITE_API_URL` | `/api` |
+| `VITE_PUBLIC_URL` | `https://tu-proyecto.vercel.app` |
+
+Las variables `VITE_*` deben existir **antes del build** del frontend.
+
+### 4. Deploy
+
+Tras el primer deploy:
+
+- Invitados: `https://tu-proyecto.vercel.app/mesa/1`
+- Admin: `https://tu-proyecto.vercel.app/admin/login`
+- Health check: `https://tu-proyecto.vercel.app/api/health`
+
+Regenera los QR con la URL final:
+
+```bash
+cd backend
+FRONTEND_URL=https://tu-proyecto.vercel.app npm run generar-qr
+```
+
+### Límite de subida en Vercel
+
+Las funciones serverless de Vercel tienen un **límite de ~4.5 MB** en el cuerpo de la petición. Archivos más grandes fallarán aunque `MAX_FILE_SIZE_MB` sea mayor. Para el evento en Vercel, usa fotos de hasta ~4 MB o despliega el backend en un VPS (ver sección EC2).
+
+### Estructura de deploy
+
+```
+vercel.json          → build frontend + rewrites SPA y /api
+api/index.js         → exporta la app Express del backend
+frontend/dist/       → sitio estático
+```
+
+## Deploy alternativo (AWS EC2 + Nginx + PM2)
 
 Cuando esté probado en local:
 

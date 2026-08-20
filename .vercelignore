@@ -1,0 +1,5 @@
+.vercel
+backend/.env
+frontend/.env
+frontend/.env.local
+*.log
